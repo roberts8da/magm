@@ -1,0 +1,100 @@
+name: Magmanode Restore
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "5 1,3,5,7,9,11,13,15,23 * * *"
+
+jobs:
+  run:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # =========================
+      # 从私有 repo 拉取脚本
+      # 用 curl + PAT Token 直接下载原始文件
+      # 避免 checkout 路径问题导致 "No such file" 报错
+      # =========================
+      - name: 拉取 restore.py
+        run: |
+          mkdir -p scripts/screenshots
+          curl -fsSL \
+            -H "Authorization: token ${{ secrets.PRIVATE_REPO_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3.raw" \
+            "https://api.github.com/repos/${{ github.repository_owner }}/MagmaRestore-auto/contents/restore.py" \
+            -o scripts/restore.py
+          ls -lh scripts/restore.py && echo "✅ restore.py 下载成功" || \
+            (echo "❌ restore.py 下载失败" && exit 1)
+
+      # =========================
+      # WARP（提供干净 IP）
+      # =========================
+      - name: 创建 WARP 网络
+        uses: fscarmen/warp-on-actions@v1.3
+        with:
+          stack: dual
+          mode: client
+
+      # =========================
+      # 系统依赖
+      # xvfb：SeleniumBase UC mode headed 模式需要虚拟显示
+      # =========================
+      - name: 安装系统依赖
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            xvfb wget curl jq \
+            python3-tk python3-dev \
+            libnss3 libatk1.0-0 libatk-bridge2.0-0 \
+            libcups2 libdrm2 libxkbcommon0 libxcomposite1 \
+            libxdamage1 libxfixes3 libxrandr2 libgbm1 \
+            libasound2 libpango-1.0-0 libcairo2
+          echo "✅ 系统依赖安装完成"
+
+      # =========================
+      # Python 依赖
+      # seleniumbase：UC mode 处理 Cloudflare Turnstile
+      # requests：TG 通知
+      # =========================
+      - name: 安装 Python 依赖
+        run: |
+          pip install --upgrade pip --break-system-packages || pip install --upgrade pip
+          pip install seleniumbase requests --break-system-packages || \
+            pip install seleniumbase requests
+          seleniumbase install uc-driver || true
+          python -c "from seleniumbase import SB; print('✅ seleniumbase 导入成功')"
+
+      - name: 检查 IP
+        run: |
+          echo "🌍 IP: $(curl -s https://api.ipify.org)"
+          curl -s https://ipinfo.io | jq '{ip,city,country,org}' 2>/dev/null || true
+
+      # =========================
+      # 运行
+      # xvfb-run：为 headed Chrome 提供虚拟 X 显示
+      # =========================
+      - name: 运行 restore.py
+        env:
+          MAGMA_USERNAME: ${{ secrets.MAGMA_USERNAME }}
+          MAGMA_PASSWORD: ${{ secrets.MAGMA_PASSWORD }}
+          TG_TOKEN:       ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID:     ${{ secrets.TG_CHAT_ID }}
+          MAX_RETRY:      "3"
+          DISPLAY:        ":99"
+        run: |
+          xvfb-run --auto-servernum \
+            --server-args="-screen 0 1280x900x24 -ac" \
+            python scripts/restore.py
+        continue-on-error: true
+
+      - name: 上传截图
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: magmanode-screenshots-${{ github.run_id }}
+          path: scripts/screenshots/
+          if-no-files-found: warn
+          retention-days: 7
