@@ -16,7 +16,7 @@ jobs:
       - name: 📥 拉取代码
         uses: actions/checkout@v4
         with:
-          repository: '${{ github.repository_owner }}/MagmaRestore-auto'
+          repository: ${{ github.repository_owner }}/MagmaRestore-auto
           path: .
           token: ${{ secrets.REPO_TOKEN }}
 
