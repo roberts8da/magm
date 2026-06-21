@@ -375,11 +375,22 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
         run: |
-          curl -L \
+          echo "=== 📥 開始從私庫下載 main.py ==="
+          
+          curl -f -L \
             -H "Authorization: token ${REPO_TOKEN}" \
             -H "Accept: application/vnd.github.raw" \
-            https://api.github.com/repos/roberts8da/scripts/contents/scripts/magama/main.py \
-            -o main.py
+            "https://github.com" \
+            -o main.py || { 
+              echo "❌ 下載失敗！GitHub 伺服器拒絕了請求，詳細原因如下："; 
+              curl -s -L -H "Authorization: token ${REPO_TOKEN}" "https://github.com"; 
+              exit 1; 
+            }
+
+          echo "=== ✅ 下載成功，開始分配虛擬螢幕並執行腳本 ==="
+          # 使用 xvfb-run 分配虚拟屏幕，让 xdotool 能够正常点击
+          xvfb-run -a python main.py
+
 
           # 使用 xvfb-run 分配虚拟屏幕，让 xdotool 能够正常点击
           xvfb-run -a python main.py
