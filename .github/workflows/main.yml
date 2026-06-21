@@ -375,12 +375,20 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
         run: |
-          curl -L \
+          echo "=== 正在從私庫 magma 下載 main.py ==="
+          
+          # 下載檔案，如果失敗（如 404 或 401），會自動列印出 GitHub 的真實錯誤訊息
+          curl -f -L \
             -H "Authorization: token ${REPO_TOKEN}" \
             -H "Accept: application/vnd.github.raw" \
-            https://api.github.com/repos/aoi675145/scripts/contents/scripts/magama/main.py \
-            -o main.py
+            "https://github.com{{ github.repository_owner }}/magma/contents/main.py" \
+            -o main.py || { 
+              echo "❌ 下載失敗！GitHub 錯誤回應如下："; 
+              curl -s -L -H "Authorization: token ${REPO_TOKEN}" "https://github.com{{ github.repository_owner }}/magma/contents/main.py"; 
+              exit 1; 
+            }
 
+          echo "=== 下載成功，正在啟動虛擬螢幕並執行腳本 ==="
           # 使用 xvfb-run 分配虚拟屏幕，让 xdotool 能够正常点击
           xvfb-run -a python main.py
 
