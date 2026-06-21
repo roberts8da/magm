@@ -59,7 +59,17 @@ jobs:
             exit 0
           fi
 
-          wget -q https://github.com
+          echo "[INFO] 開始下載 Xray 核心..."
+          # 嘗試從第一個載點下載，如果失敗，自動切換到備用官方載點
+          wget -q --timeout=15 --tries=3 https://github.com || \
+          wget -q --timeout=15 --tries=3 https://github.com
+
+          # 安全檢查：確保檔案真的存在再解壓
+          if [ ! -f "Xray-linux-64.zip" ]; then
+            echo "❌ 嚴重錯誤：無法下載 Xray-linux-64.zip，請檢查 GitHub Actions 網路連線！"
+            exit 1
+          fi
+
           unzip -q Xray-linux-64.zip -d xray
           chmod +x xray/xray
 
@@ -72,7 +82,17 @@ jobs:
           if url.startswith("socks5://") or url.startswith("socks://"):
               with open("use_external_socks.txt", "w", encoding="utf-8") as h: h.write(url.split("#", 1)[0])
               sys.exit(0)
-          # (此處保持您原本的 Vless/Vmess/Trojan 解析邏輯即可)
+          
+          if "#" in url: url = url.rsplit("#", 1)[0]
+          config = {
+              "log": {"loglevel": "warning"},
+              "inbounds": [
+                  {"port": 1080, "listen": "127.0.0.1", "protocol": "socks", "settings": {"udp": True}},
+                  {"port": 1081, "listen": "127.0.0.1", "protocol": "http"}
+              ],
+              "outbounds": []
+          }
+          # (此處保持您原來的 Vless/Vmess/Trojan/SS 解析邏輯即可)
           PYEOF
 
           if [ -f "use_external_socks.txt" ]; then
@@ -89,7 +109,6 @@ jobs:
           for i in 1 2 3 4 5; do
             if curl -x socks5://127.0.0.1:1080 -s --max-time 15 https://ipify.org > /dev/null 2>&1; then
               echo "[INFO] ✅ 代理连接成功"
-              # 這裡自動切除 socks5:// 前綴，防止您的 SeleniumBase 啟動時崩潰
               echo "PROXY_SERVER=127.0.0.1:1080" >> $GITHUB_ENV
               echo "NETWORK_MODE=代理" >> $GITHUB_ENV
               exit 0
