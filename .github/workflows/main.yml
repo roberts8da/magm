@@ -16,9 +16,9 @@ jobs:
       - name: 📥 拉取代码
         uses: actions/checkout@v4
         with:
-          path: .
-          # 使用你添加的 REPO_TOKEN 来获取修改工作流文件的权限
-          token: ${{ secrets.REPO_TOKEN }}
+          repository: ${{ github.repository_owner }}/MagmaRestore-auto
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          path: private
 
       - name: 🐍 设置 Python
         uses: actions/setup-python@v5
