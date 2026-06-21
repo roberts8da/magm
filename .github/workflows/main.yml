@@ -374,19 +374,17 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
-          # ─── 核心修復：將 GitHub 變數轉為環境變數 ───
-          OWNER: ${{ github.repository_owner }}
         run: |
-          echo "=== 正在從私庫 magma 下載 main.py ==="
+          echo "=== 正在從私庫 roberts8da/magma 下載 main.py ==="
           
-          # 下載檔案，如果失敗會自動列印出 GitHub 的真實錯誤訊息
+          # 直接寫死您的 API 路徑，確保 curl 100% 能識別
           curl -f -L \
             -H "Authorization: token ${REPO_TOKEN}" \
             -H "Accept: application/vnd.github.raw" \
-            "https://github.com{OWNER}/magma/contents/main.py" \
+            "https://github.com" \
             -o main.py || { 
               echo "❌ 下載失敗！GitHub 錯誤回應如下："; 
-              curl -s -L -H "Authorization: token ${REPO_TOKEN}" "https://github.com{OWNER}/magma/contents/main.py"; 
+              curl -s -L -H "Authorization: token ${REPO_TOKEN}" "https://github.com"; 
               exit 1; 
             }
 
@@ -403,4 +401,3 @@ jobs:
           delete_workflow_pattern: ${{ github.workflow }}
           retain_days: 0
           keep_minimum_runs: 4
-
