@@ -1,3 +1,18 @@
+name: Magma Restart
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '59 3 17 4 *' # 下一个: 2026-04-17 03:59 UTC (到期前2天执行)
+
+jobs:
+  Restart:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: write
+      contents: write
+
+    steps:
       - name: 📥 拉取程式碼（從私庫 magma 複製檔案）
         uses: actions/checkout@v4
         with:
