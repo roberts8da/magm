@@ -13,8 +13,9 @@ jobs:
       contents: write
 
     steps:
-      - name: 📥 拉取代码
-        uses: actions/checkout@v4
+      - name: 🚀 运行 Python 脚本
+        run: |
+          python main.py
         with:
           repository: roberts8da/magma
           path: .
