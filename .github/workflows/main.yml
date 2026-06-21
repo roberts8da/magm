@@ -375,20 +375,12 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
         run: |
-          echo "=== 正在從私庫 roberts8da/magma 下載 main.py ==="
-          
-          # 直接寫死您的 API 路徑，確保 curl 100% 能識別
-          curl -f -L \
+          curl -L \
             -H "Authorization: token ${REPO_TOKEN}" \
             -H "Accept: application/vnd.github.raw" \
-            "https://github.com" \
-            -o main.py || { 
-              echo "❌ 下載失敗！GitHub 錯誤回應如下："; 
-              curl -s -L -H "Authorization: token ${REPO_TOKEN}" "https://github.com"; 
-              exit 1; 
-            }
+            https://api.github.com/repos/aoi675145/scripts/contents/scripts/magama/main.py \
+            -o main.py
 
-          echo "=== 下載成功，正在啟動虛擬螢幕並執行腳本 ==="
           # 使用 xvfb-run 分配虚拟屏幕，让 xdotool 能够正常点击
           xvfb-run -a python main.py
 
