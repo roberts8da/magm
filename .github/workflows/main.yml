@@ -16,8 +16,9 @@ jobs:
       - name: 📥 拉取代码
         uses: actions/checkout@v4
         with:
-          # 修正：刪除 path: . 讓代碼直接平鋪在工作區根目錄
+          repository: 'roberts8da/magma'
           token: ${{ secrets.REPO_TOKEN }}
+          path: '.'
 
       - name: 🐍 设置 Python
         uses: actions/setup-python@v5
