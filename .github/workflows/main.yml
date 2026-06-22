@@ -366,7 +366,6 @@ jobs:
           exit 0
 
       - name: 🚀 运行 Magma Python 脚本
-        working-directory: ./scripts 
         env:
           MAGMANODE: ${{ secrets.MAGMANODE }}
           MAGMA_PROXY: ${{ env.PROXY_SERVER }}
@@ -375,17 +374,20 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
         run: |
-          echo "[INFO] 當前工作目錄: \$(pwd)"
-          echo "[INFO] 當前目錄下的檔案: \$(ls -la)"
-          echo "[INFO] 當前網路模式: \$NETWORK_MODE"
+          echo "[INFO] 當前工作目錄: $(pwd)"
+          echo "[INFO] 當前網路模式: $NETWORK_MODE"
           
-          # 關鍵修正 3：刪除原本的 curl 下載程式碼。
-          # 因為 actions/checkout 已經把您私庫的 scripts/main.py 下載下來了，直接執行即可！
-          if [ -f "main.py" ]; then
-            echo "[INFO] 找到 main.py，開始執行自動化腳本..."
+          # 檢查 scripts 資料夾和 main.py 的存在，並直接指定路徑執行
+          if [ -f "scripts/main.py" ]; then
+            echo "[INFO] 成功在 scripts 資料夾下找到 main.py，開始執行..."
+            python scripts/main.py
+          elif [ -f "main.py" ]; then
+            echo "[INFO] 在根目錄找到 main.py，開始執行..."
             python main.py
           else
-            echo "[ERROR] 在 scripts 目錄下找不到 main.py！請檢查您的私庫檔案結構。"
+            echo "[ERROR] 找不到 main.py 檔案！"
+            echo "[DEBUG] 以下為當前根目錄下的所有檔案清單："
+            ls -R
             exit 1
           fi
 
