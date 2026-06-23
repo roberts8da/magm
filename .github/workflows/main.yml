@@ -2,7 +2,7 @@ name: Magma Restart
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */2 * * *' # ☀️ 每兩小時的整點自動執行一次 (例如 02:00, 04:00, 06:00...)
+    - cron: '0 */1 * * *' # ☀️ 每小時的整點自動執行一次 (例如 01:00, 03:00, 05:00...)
 
 jobs:
   Restart:
